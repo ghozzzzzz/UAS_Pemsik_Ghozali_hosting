@@ -2,27 +2,33 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const initDatabase = require('./database/init');
-
+const corsConfig = require('./config/corsConfig');
 const app = express();
 
 // Middleware
 app.use(express.json());
 
 // CORS configuration
-const corsOptions = {
-  origin: process.env.NODE_ENV === 'production' 
-    ? [
-        'https://frontend-ghozali.vercel.app',
-        /\.vercel\.app$/  // Untuk semua subdomain vercel
-      ]
-    : ['http://localhost:5173', 'http://localhost:3000'],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  exposedHeaders: ['Content-Range', 'X-Content-Range']
+const corsConfig = {
+  development: {
+    origin: ['http://localhost:5173', 'http://localhost:3000'],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    exposedHeaders: ['Content-Range', 'X-Content-Range']
+  },
+  production: {
+    origin: ['https://frontend-ghozali.vercel.app'],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    exposedHeaders: ['Content-Range', 'X-Content-Range']
+  }
 };
 
+
 app.use(cors(corsOptions));
+app.use(cors(corsConfig));
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -37,6 +43,12 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/fire', require('./routes/fire'));
 app.use('/api/drought', require('./routes/drought'));
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', 'http://localhost:5173');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  next();
+});
 
 // Error handling middleware
 app.use((err, req, res, next) => {
