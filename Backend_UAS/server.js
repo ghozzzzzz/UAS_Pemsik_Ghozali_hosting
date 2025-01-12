@@ -13,7 +13,6 @@ const corsOptions = {
   origin: process.env.NODE_ENV === 'production' 
     ? [
         'https://frontend-ghozali.vercel.app',
-        'https://frontend-ghozali-git-main-ghozali.vercel.app',
         /\.vercel\.app$/  // Untuk semua subdomain vercel
       ]
     : ['http://localhost:5173', 'http://localhost:3000'],
