@@ -31,29 +31,50 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    
+    console.log('Login attempt:', {
+      email: form.email,
+      apiUrl: import.meta.env.VITE_API_URL
+    });
+    
     try {
       const response = await api.post('/auth/login', form);
-      const { user, token } = response.data.data;
+      console.log('Login response:', response);
       
+      const { user, token } = response.data.data;
       dispatch(setCredentials({ user, token }));
-
+  
       await Swal.fire({
         icon: 'success',
         title: 'Login Berhasil',
         text: 'Selamat datang kembali!',
       });
-
+  
       navigate('/admin');
     } catch (error) {
+      console.error('Login error:', {
+        message: error.message,
+        response: error.response,
+        config: error.config
+      });
+      
+      let errorMessage = 'Terjadi kesalahan pada server';
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (!navigator.onLine) {
+        errorMessage = 'Tidak ada koneksi internet';
+      }
+  
       Swal.fire({
         icon: 'error',
         title: 'Login Gagal',
-        text: error.response?.data?.message || 'Terjadi kesalahan pada server',
+        text: errorMessage,
       });
     } finally {
       setLoading(false);
     }
   };
+  
 
   const handleContinueWithoutAccount = () => {
     navigate('/');

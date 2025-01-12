@@ -19,21 +19,29 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    console.log('Submitting registration form:', form);
+    
+    // Log environment dan URL
+    console.log('Environment:', import.meta.env.MODE);
+    console.log('API URL:', import.meta.env.VITE_API_URL);
+    
     try {
       const response = await api.post('/auth/register', form);
-      console.log('Registration response:', response.data);
+      console.log('Registration response:', response);
       
       if (response.data.success) {
         await Swal.fire({
           icon: 'success',
           title: 'Registrasi Berhasil',
-          text: 'Akun anda telah berhasil dibuat',
+          text: response.data.message,
         });
         navigate('/login');
       }
     } catch (error) {
-      console.error('Registration error:', error);
+      console.error('Registration error:', {
+        message: error.message,
+        response: error.response,
+        config: error.config
+      });
       
       let errorMessage = 'Terjadi kesalahan pada server';
       if (error.response?.data?.message) {
@@ -41,7 +49,7 @@ const Register = () => {
       } else if (!navigator.onLine) {
         errorMessage = 'Tidak ada koneksi internet';
       }
-
+  
       Swal.fire({
         icon: 'error',
         title: 'Registrasi Gagal',
@@ -51,6 +59,7 @@ const Register = () => {
       setLoading(false);
     }
   };
+  
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-red-50 to-gray-100 py-12 px-4 sm:px-6 lg:px-8">

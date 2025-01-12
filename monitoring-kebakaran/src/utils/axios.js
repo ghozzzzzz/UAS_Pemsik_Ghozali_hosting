@@ -1,21 +1,26 @@
 import axios from 'axios';
 
+const baseURL = import.meta.env.VITE_API_URL || 'https://backend-ghozali-production.up.railway.app/api';
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
-  withCredentials: true,
+  baseURL,
+  withCredentials: false,
   headers: {
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
   }
 });
 
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
+    // Log URL yang diakses
+    console.log('Making request to:', config.baseURL + config.url);
+    
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    console.log('Making request to:', config.url);
     return config;
   },
   (error) => {
@@ -26,18 +31,15 @@ api.interceptors.request.use(
 
 // Response interceptor
 api.interceptors.response.use(
-  (response) => {
-    console.log('Received response:', response.config.url);
-    return response;
-  },
+  (response) => response,
   (error) => {
-    if (error.response?.status === 404) {
-      console.error('API endpoint tidak ditemukan:', error.config.url);
-    } else if (error.response?.status === 401) {
+    console.error('Response error:', error.response || error);
+    
+    if (error.response?.status === 401) {
       localStorage.removeItem('token');
       window.location.href = '/login';
     }
-    console.error('Response error:', error.response || error);
+    
     return Promise.reject(error);
   }
 );
