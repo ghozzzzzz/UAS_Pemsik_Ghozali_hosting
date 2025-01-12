@@ -1,8 +1,9 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://backend-ghozali-production.up.railway.app/api';
+// Pastikan menggunakan URL yang benar
+const API_URL = 'https://backend-ghozali-production.up.railway.app/api';
 
-console.log('API URL:', API_URL); // Debugging
+console.log('Using API URL:', API_URL); // Untuk debugging
 
 const api = axios.create({
   baseURL: API_URL,
@@ -17,13 +18,8 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     // Log untuk debugging
-    console.log('Request Config:', {
-      url: config.url,
-      baseURL: config.baseURL,
-      method: config.method,
-      headers: config.headers
-    });
-
+    console.log('Making request to:', config.baseURL + config.url);
+    
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -39,14 +35,14 @@ api.interceptors.request.use(
 // Response interceptor
 api.interceptors.response.use(
   (response) => {
-    console.log('Response:', response.status, response.data);
+    console.log('Response Success:', response.status);
     return response;
   },
   (error) => {
     console.error('Response Error:', {
-      message: error.message,
-      response: error.response?.data,
-      status: error.response?.status
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message
     });
     return Promise.reject(error);
   }

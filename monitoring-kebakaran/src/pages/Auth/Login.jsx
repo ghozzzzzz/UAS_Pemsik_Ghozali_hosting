@@ -33,18 +33,28 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    console.log('Attempting login with:', { email: form.email });
-
+    console.log('Login attempt with:', {
+      email: form.email,
+      apiUrl: api.defaults.baseURL
+    });
+  
     try {
-      const response = await api.post('/auth/login', form);
+      const response = await api.post('/auth/login', {
+        email: form.email,
+        password: form.password
+      });
+      
       console.log('Login response:', response.data);
-
+  
       if (response.data.success) {
         const { user, token } = response.data.data;
         
-        // Dispatch ke Redux
+        // Simpan token
+        localStorage.setItem('token', token);
+        
+        // Update Redux state
         dispatch(setCredentials({ user, token }));
-
+  
         await Swal.fire({
           icon: 'success',
           title: 'Login Berhasil',
@@ -52,11 +62,15 @@ const Login = () => {
           timer: 1500,
           showConfirmButton: false
         });
-
+  
         navigate('/admin');
       }
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('Login error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
       
       let errorMessage = 'Terjadi kesalahan pada server';
       if (error.response?.data?.message) {
@@ -64,7 +78,7 @@ const Login = () => {
       } else if (!navigator.onLine) {
         errorMessage = 'Tidak ada koneksi internet';
       }
-
+  
       await Swal.fire({
         icon: 'error',
         title: 'Login Gagal',
@@ -74,6 +88,7 @@ const Login = () => {
       setLoading(false);
     }
   };
+  
 
   const handleContinueWithoutAccount = () => {
     navigate('/');
