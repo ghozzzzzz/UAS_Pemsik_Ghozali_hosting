@@ -9,46 +9,29 @@ const app = express();
 app.use(express.json());
 
 // CORS configuration
-const corsConfig = {
-  development: {
-    origin: ['http://localhost:5173', 'http://localhost:3000'],
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    exposedHeaders: ['Content-Range', 'X-Content-Range']
-  },
-  production: {
-    origin: ['https://frontend-ghozali.vercel.app'],
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    exposedHeaders: ['Content-Range', 'X-Content-Range']
-  }
-};
-
-
-app.use(cors(corsOptions));
-app.use(cors(corsConfig));
+app.use(cors(corsConfig[process.env.NODE_ENV || 'development']));
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.status(200).json({ 
-    status: 'OK', 
+  res.status(200).json({
+    status: 'OK',
     environment: process.env.NODE_ENV,
     timestamp: new Date().toISOString()
   });
 });
 
-// Routes
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/fire', require('./routes/fire'));
-app.use('/api/drought', require('./routes/drought'));
+// Middleware for Access-Control-Allow-Origin, Access-Control-Allow-Methods, and Access-Control-Allow-Headers
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', 'http://localhost:5173');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   next();
 });
+
+// Routes
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/fire', require('./routes/fire'));
+app.use('/api/drought', require('./routes/drought'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -69,7 +52,7 @@ const startServer = async () => {
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
       console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`CORS enabled for: ${corsOptions.origin}`);
+      console.log(`CORS enabled for: ${corsConfig[process.env.NODE_ENV || 'development'].origin}`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);
