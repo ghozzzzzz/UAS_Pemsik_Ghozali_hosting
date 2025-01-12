@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../utils/axios';
 import Swal from 'sweetalert2';
 
 const Register = () => {
@@ -19,29 +19,37 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    console.log('Submitting registration form:', form);
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/register', form);
+      const response = await api.post('/auth/register', form);
+      console.log('Registration response:', response.data);
+      
       if (response.data.success) {
         await Swal.fire({
           icon: 'success',
           title: 'Registrasi Berhasil',
-          text: response.data.message,
+          text: 'Akun anda telah berhasil dibuat',
         });
         navigate('/login');
       }
     } catch (error) {
+      console.error('Registration error:', error);
+      
+      let errorMessage = 'Terjadi kesalahan pada server';
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (!navigator.onLine) {
+        errorMessage = 'Tidak ada koneksi internet';
+      }
+
       Swal.fire({
         icon: 'error',
         title: 'Registrasi Gagal',
-        text: error.response?.data?.message || 'Terjadi kesalahan',
+        text: errorMessage,
       });
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleContinueWithoutAccount = () => {
-    navigate('/');
   };
 
   return (
@@ -119,31 +127,14 @@ const Register = () => {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Loading...
+                  Mendaftar...
                 </span>
               ) : (
                 'Daftar'
               )}
             </button>
-
-            <button
-              type="button"
-              onClick={handleContinueWithoutAccount}
-              className="w-full px-4 py-3 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200"
-            >
-              Lanjut Tanpa Akun
-            </button>
           </div>
         </form>
-
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300"></div>
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">atau</span>
-          </div>
-        </div>
 
         <div className="text-center text-sm">
           <span className="text-gray-600">Sudah punya akun? </span>
