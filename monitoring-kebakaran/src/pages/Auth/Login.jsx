@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
-import { setCredentials } from '../Redux/authSlice';
+import { setCredentials } from '../../Redux/authSlice';
 import api from '../../utils/axios';
 import Swal from 'sweetalert2';
 
@@ -19,6 +19,8 @@ const Login = () => {
     if (token) {
       navigate('/admin');
     }
+    // Log untuk debugging
+    console.log('Current API URL:', import.meta.env.VITE_API_URL);
   }, [token, navigate]);
 
   const handleChange = (e) => {
@@ -31,32 +33,30 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
-    console.log('Login attempt:', {
-      email: form.email,
-      apiUrl: import.meta.env.VITE_API_URL
-    });
-    
+    console.log('Attempting login with:', { email: form.email });
+
     try {
       const response = await api.post('/auth/login', form);
-      console.log('Login response:', response);
-      
-      const { user, token } = response.data.data;
-      dispatch(setCredentials({ user, token }));
-  
-      await Swal.fire({
-        icon: 'success',
-        title: 'Login Berhasil',
-        text: 'Selamat datang kembali!',
-      });
-  
-      navigate('/admin');
+      console.log('Login response:', response.data);
+
+      if (response.data.success) {
+        const { user, token } = response.data.data;
+        
+        // Dispatch ke Redux
+        dispatch(setCredentials({ user, token }));
+
+        await Swal.fire({
+          icon: 'success',
+          title: 'Login Berhasil',
+          text: 'Selamat datang kembali!',
+          timer: 1500,
+          showConfirmButton: false
+        });
+
+        navigate('/admin');
+      }
     } catch (error) {
-      console.error('Login error:', {
-        message: error.message,
-        response: error.response,
-        config: error.config
-      });
+      console.error('Login error:', error);
       
       let errorMessage = 'Terjadi kesalahan pada server';
       if (error.response?.data?.message) {
@@ -64,8 +64,8 @@ const Login = () => {
       } else if (!navigator.onLine) {
         errorMessage = 'Tidak ada koneksi internet';
       }
-  
-      Swal.fire({
+
+      await Swal.fire({
         icon: 'error',
         title: 'Login Gagal',
         text: errorMessage,
@@ -74,7 +74,6 @@ const Login = () => {
       setLoading(false);
     }
   };
-  
 
   const handleContinueWithoutAccount = () => {
     navigate('/');

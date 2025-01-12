@@ -13,26 +13,32 @@ const Register = () => {
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForm({ 
+      ...form, 
+      [e.target.name]: e.target.value 
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
-    // Log environment dan URL
-    console.log('Environment:', import.meta.env.MODE);
-    console.log('API URL:', import.meta.env.VITE_API_URL);
-    
+    console.log('Attempting registration with:', { 
+      email: form.email,
+      name: form.name,
+      apiUrl: import.meta.env.VITE_API_URL 
+    });
+
     try {
       const response = await api.post('/auth/register', form);
-      console.log('Registration response:', response);
-      
+      console.log('Registration response:', response.data);
+
       if (response.data.success) {
         await Swal.fire({
           icon: 'success',
           title: 'Registrasi Berhasil',
-          text: response.data.message,
+          text: 'Silahkan login dengan akun anda',
+          timer: 1500,
+          showConfirmButton: false
         });
         navigate('/login');
       }
@@ -42,15 +48,15 @@ const Register = () => {
         response: error.response,
         config: error.config
       });
-      
+
       let errorMessage = 'Terjadi kesalahan pada server';
       if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       } else if (!navigator.onLine) {
         errorMessage = 'Tidak ada koneksi internet';
       }
-  
-      Swal.fire({
+
+      await Swal.fire({
         icon: 'error',
         title: 'Registrasi Gagal',
         text: errorMessage,
@@ -59,7 +65,10 @@ const Register = () => {
       setLoading(false);
     }
   };
-  
+
+  const handleContinueWithoutAccount = () => {
+    navigate('/');
+  };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-red-50 to-gray-100 py-12 px-4 sm:px-6 lg:px-8">
@@ -142,8 +151,25 @@ const Register = () => {
                 'Daftar'
               )}
             </button>
+
+            <button
+              type="button"
+              onClick={handleContinueWithoutAccount}
+              className="w-full px-4 py-3 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200"
+            >
+              Lanjut Tanpa Akun
+            </button>
           </div>
         </form>
+
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-white text-gray-500">atau</span>
+          </div>
+        </div>
 
         <div className="text-center text-sm">
           <span className="text-gray-600">Sudah punya akun? </span>
